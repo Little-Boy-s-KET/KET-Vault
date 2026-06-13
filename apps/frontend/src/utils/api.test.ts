@@ -69,7 +69,6 @@ describe("submitProposal", () => {
     expect(options.method).toBe("POST");
     expect(options.headers["Content-Type"]).toBe("application/json");
 
-    // Verify body contains the proposal data
     const body = JSON.parse(options.body);
     expect(body.token).toBe("USDC");
     expect(body.amount).toBe(1000);
@@ -100,6 +99,27 @@ describe("submitProposal", () => {
         context: "",
       })
     ).rejects.toThrow("Invalid action");
+  });
+
+  it("throws fallback error on HTTP failure without detail", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 502,
+      json: () => Promise.resolve({}),
+    });
+
+    await expect(
+      submitProposal({
+        action: "FARM_YIELD" as unknown as ProposalAction,
+        token: "USDC",
+        amount: 100,
+        target_protocol: "",
+        opportunity_type: "YIELD_FARM",
+        max_impermanent_loss: 5.0,
+        min_audit_score: 80.0,
+        context: "",
+      })
+    ).rejects.toThrow("HTTP 502");
   });
 
   it("throws generic error when JSON parsing fails", async () => {
@@ -194,7 +214,6 @@ describe("getAgents", () => {
 describe("connectPipelineWS", () => {
   let mockWsInstances: MockWebSocket[] = [];
 
-  // Mock WebSocket using a class (arrow functions can't be constructors)
   class MockWebSocket {
       static CONNECTING = 0;
       static OPEN = 1;
@@ -214,7 +233,6 @@ describe("connectPipelineWS", () => {
 
       constructor(url: string) {
         this.url = url;
-        // Set to OPEN after construction
         setTimeout(() => {
           this.readyState = 1;
           this.onopen?.({});
@@ -231,7 +249,6 @@ describe("connectPipelineWS", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    // Re-stub fetch since unstubAllGlobals removes it
     vi.stubGlobal("fetch", mockFetch);
   });
 
@@ -257,7 +274,6 @@ describe("connectPipelineWS", () => {
       onEvent: vi.fn(),
     });
 
-    // Simulate connection open
     mockWsInstances[0].readyState = 1;
     conn.close();
 
@@ -281,12 +297,12 @@ describe("connectPipelineWS", () => {
       timestamp: "2026-01-01T00:00:00Z",
     };
 
-    // Simulate receiving a message
     ws.onmessage?.({ data: JSON.stringify(mockEvent) });
 
     expect(onEvent).toHaveBeenCalledTimes(1);
     expect(onEvent).toHaveBeenCalledWith(mockEvent);
   });
+
 
   it("handles malformed JSON gracefully", async () => {
     const { connectPipelineWS } = await import("./api");
@@ -296,9 +312,73 @@ describe("connectPipelineWS", () => {
     connectPipelineWS("test-bad-json", { onEvent });
 
     const ws = mockWsInstances[0];
-    ws.onmessage?.({ data: "not valid json {{{" });
+    ws.onmessage?.({ data: "not valid json {{{" } as unknown as CloseEvent | Event | MessageEvent);
 
     expect(onEvent).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
+  });
+
+  it("handles WS onerror", async () => {
+    const { connectPipelineWS } = await import("./api");
+
+    connectPipelineWS("test-error", {
+      onEvent: vi.fn(),
+    });
+
+    const ws = mockWsInstances[mockWsInstances.length - 1];
+    ws.onerror?.({} as unknown as CloseEvent | Event | MessageEvent);
+  });
+
+  it("handles WS code 4004 not found cleanly", async () => {
+    const { connectPipelineWS } = await import("./api");
+    const onClose = vi.fn();
+
+    connectPipelineWS("test-4004", {
+      onEvent: vi.fn(),
+      onClose
+    });
+
+    const ws = mockWsInstances[mockWsInstances.length - 1];
+    ws.onclose?.({ code: 4004 } as unknown as CloseEvent | Event | MessageEvent);
+
+    expect(onClose).toHaveBeenCalled();
+  });
+
+
+
+  it("handles WS reconnect on unexpected close", async () => {
+    const { connectPipelineWS } = await import("./api");
+    const onReconnecting = vi.fn();
+
+    vi.useFakeTimers();
+
+    connectPipelineWS("test-reconnect", {
+      onEvent: vi.fn(),
+      onReconnecting
+    });
+
+    const ws = mockWsInstances[0];
+
+    ws.onclose?.({ code: 1006 } as unknown as CloseEvent | Event | MessageEvent);
+    expect(onReconnecting).toHaveBeenCalledWith(1);
+
+    vi.runAllTimers();
+    expect(mockWsInstances).toHaveLength(2);
+
+    const ws2 = mockWsInstances[1];
+    ws2.readyState = 1;
+    const onReconnected = vi.fn();
+    connectPipelineWS("test-reconnect-2", {
+      onEvent: vi.fn(),
+      onReconnecting,
+      onReconnected
+    });
+    const ws3 = mockWsInstances[2];
+    ws3.onclose?.({ code: 1006 } as unknown as CloseEvent | Event | MessageEvent);
+    vi.runAllTimers();
+    mockWsInstances[3].onopen?.({} as unknown as CloseEvent | Event | MessageEvent);
+    expect(onReconnected).toHaveBeenCalled();
+
+    vi.useRealTimers();
   });
 });
