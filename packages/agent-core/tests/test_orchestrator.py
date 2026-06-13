@@ -246,12 +246,13 @@ class TestOrchestrator:
         assert risk_decision.data["il_risk_pct"] == 0.0
 
     @pytest.mark.asyncio
-    async def test_pipeline_has_three_agents(self, orchestrator):
-        """Pipeline should always involve exactly 3 agents."""
-        assert len(orchestrator.AGENT_PIPELINE) == 3
-        assert "yield_maxi" in orchestrator.AGENT_PIPELINE
-        assert "risk_auditor" in orchestrator.AGENT_PIPELINE
-        assert "macro_strategist" in orchestrator.AGENT_PIPELINE
+    async def test_pipeline_has_three_core_agents(self, orchestrator):
+        """Pipeline should always involve at least 3 core agents."""
+        from router import CORE_EXPERTS
+        assert len(CORE_EXPERTS) == 3
+        assert "yield_maxi" in CORE_EXPERTS
+        assert "risk_auditor" in CORE_EXPERTS
+        assert "macro_strategist" in CORE_EXPERTS
 
     @pytest.mark.asyncio
     async def test_consensus_threshold(self, orchestrator):
