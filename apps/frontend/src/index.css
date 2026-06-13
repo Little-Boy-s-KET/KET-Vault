@@ -364,6 +364,11 @@ body {
    Agent Board (3 Cards)
    ============================================================================ */
 
+.agent-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg);
+}
 
 /* ============================================================================
    Agent Card
@@ -960,6 +965,10 @@ body {
 
   .form-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .agent-board {
+    grid-template-columns: 1fr;
   }
 
   .header {

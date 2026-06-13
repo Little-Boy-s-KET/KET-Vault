@@ -259,3 +259,63 @@ class TestDisconnect:
 
         manager.disconnect(pid, mock_ws)
         assert mock_ws not in manager._connections[pid]
+
+class TestConnectMissingBranch:
+    @pytest.mark.asyncio
+    async def test_connect_unseen_pipeline(self, manager):
+        from fastapi import WebSocket
+        mock_ws = AsyncMock(spec=WebSocket)
+        await manager.connect("not-yet-created-pipeline", mock_ws)
+        assert mock_ws in manager._connections["not-yet-created-pipeline"]
+
+class TestConnect:
+    @pytest.mark.asyncio
+    async def test_connect_accepts_and_adds(self, manager, sample_proposal):
+        from fastapi import WebSocket
+        pid = manager.create_pipeline(sample_proposal)
+        mock_ws = AsyncMock(spec=WebSocket)
+
+        await manager.connect(pid, mock_ws)
+
+        mock_ws.accept.assert_called_once()
+        assert mock_ws in manager._connections[pid]
+
+    @pytest.mark.asyncio
+    async def test_connect_replays_events(self, manager, sample_proposal):
+        from fastapi import WebSocket
+        pid = manager.create_pipeline(sample_proposal)
+        await manager.broadcast(pid, {"type": "event1"})
+
+        mock_ws = AsyncMock(spec=WebSocket)
+        await manager.connect(pid, mock_ws)
+
+        mock_ws.send_json.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_connect_handles_send_error(self, manager, sample_proposal):
+        from fastapi import WebSocket
+        pid = manager.create_pipeline(sample_proposal)
+        await manager.broadcast(pid, {"type": "event1"})
+
+        mock_ws = AsyncMock(spec=WebSocket)
+        mock_ws.send_json.side_effect = Exception("Send failed")
+
+        await manager.connect(pid, mock_ws)
+        assert mock_ws in manager._connections[pid]
+
+class TestBroadcastDeadConnections:
+    @pytest.mark.asyncio
+    async def test_broadcast_cleans_dead_connections(self, manager, sample_proposal):
+        from fastapi import WebSocket
+        pid = manager.create_pipeline(sample_proposal)
+        mock_ws_good = AsyncMock(spec=WebSocket)
+        mock_ws_bad = AsyncMock(spec=WebSocket)
+        mock_ws_bad.send_json.side_effect = Exception("Disconnected")
+
+        await manager.connect(pid, mock_ws_good)
+        await manager.connect(pid, mock_ws_bad)
+
+        await manager.broadcast(pid, {"type": "test"})
+
+        assert mock_ws_good in manager._connections[pid]
+        assert mock_ws_bad not in manager._connections[pid]
