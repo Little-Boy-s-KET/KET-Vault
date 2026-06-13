@@ -25,8 +25,6 @@ export function AumDonutChart() {
   const strokeWidth = 16;
   const circumference = 2 * Math.PI * radius; // ~314.16
 
-  let currentOffset = 0;
-
   return (
     <div className="aum-chart-container">
       <div className="chart-wrapper">
@@ -47,8 +45,9 @@ export function AumDonutChart() {
           />
           {ALLOCATIONS.map((alloc, idx) => {
             const strokeDasharray = `${(alloc.percentage / 100) * circumference} ${circumference}`;
-            const strokeDashoffset = -currentOffset;
-            currentOffset += (alloc.percentage / 100) * circumference;
+
+            const offsetPercentage = ALLOCATIONS.slice(0, idx).reduce((sum, item) => sum + item.percentage, 0);
+            const strokeDashoffset = -(offsetPercentage / 100) * circumference;
 
             const isHovered = hoveredIdx === idx;
 

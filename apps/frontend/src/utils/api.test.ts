@@ -7,6 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { getWsUrl, submitProposal, getPipelineStatus, getAgents } from "./api";
+import type { ProposalAction } from "../types";
 
 // =========================================================================
 // Mock fetch
@@ -89,7 +90,7 @@ describe("submitProposal", () => {
 
     await expect(
       submitProposal({
-        action: "FARM_YIELD" as any,
+        action: "FARM_YIELD" as unknown as ProposalAction,
         token: "USDC",
         amount: 100,
         target_protocol: "",
@@ -191,14 +192,10 @@ describe("getAgents", () => {
 // =========================================================================
 
 describe("connectPipelineWS", () => {
-  let mockWsInstances: any[] = [];
-  let OriginalWebSocket: typeof WebSocket;
+  let mockWsInstances: MockWebSocket[] = [];
 
-  beforeEach(() => {
-    mockWsInstances = [];
-
-    // Mock WebSocket using a class (arrow functions can't be constructors)
-    class MockWebSocket {
+  // Mock WebSocket using a class (arrow functions can't be constructors)
+  class MockWebSocket {
       static CONNECTING = 0;
       static OPEN = 1;
       static CLOSING = 2;
@@ -206,11 +203,11 @@ describe("connectPipelineWS", () => {
 
       url: string;
       readyState = 0;
-      onopen: any = null;
-      onmessage: any = null;
-      onclose: any = null;
-      onerror: any = null;
-      close = vi.fn().mockImplementation(function (this: any) {
+      onopen: ((ev: unknown) => void) | null = null;
+      onmessage: ((ev: unknown) => void) | null = null;
+      onclose: ((ev: unknown) => void) | null = null;
+      onerror: ((ev: unknown) => void) | null = null;
+      close = vi.fn().mockImplementation(function (this: MockWebSocket) {
         this.readyState = 3;
       });
       send = vi.fn();
@@ -226,6 +223,9 @@ describe("connectPipelineWS", () => {
       }
     }
 
+
+  beforeEach(() => {
+    mockWsInstances = [];
     vi.stubGlobal("WebSocket", MockWebSocket);
   });
 

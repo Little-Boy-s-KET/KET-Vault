@@ -285,8 +285,8 @@ export function usePipeline() {
             clearInterval(pingInterval);
           }
         }, 15_000);
-      } catch (err: any) {
-        setError(err.message || "Failed to submit proposal");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to submit proposal");
         setIsRunning(false);
         addToast("Failed to connect to server", "error");
       }
