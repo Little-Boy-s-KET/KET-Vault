@@ -25,8 +25,6 @@ export function ConsensusResult({ result }: Props) {
     result.votes_pass + result.votes_reject + result.votes_defer;
 
   const downloadReport = () => {
-    const yieldMaxi = result.decisions.find((d) => d.agent_name === "yield_maxi");
-    const riskAuditor = result.decisions.find((d) => d.agent_name === "risk_auditor");
     let text = `==================================================\n`;
     text += `              KET BOARD AUDIT REPORT (MoE)\n`;
     text += `==================================================\n`;

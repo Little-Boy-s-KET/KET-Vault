@@ -5,16 +5,15 @@
  * Updated for 10-agent MoE architecture with direct WebSocket usage.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { usePipeline } from "./usePipeline";
-import type { PipelineEvent } from "../types";
 
 // =========================================================================
 // Mock WebSocket & API
 // =========================================================================
 
-let mockWsInstances: any[] = [];
+let mockWsInstances: MockWebSocket[] = [];
 
 class MockWebSocket {
   static CONNECTING = 0;
@@ -24,10 +23,10 @@ class MockWebSocket {
 
   url: string;
   readyState = 0;
-  onopen: ((ev: any) => void) | null = null;
-  onmessage: ((ev: any) => void) | null = null;
-  onclose: ((ev: any) => void) | null = null;
-  onerror: ((ev: any) => void) | null = null;
+  onopen: ((ev: unknown) => void) | null = null;
+  onmessage: ((ev: unknown) => void) | null = null;
+  onclose: ((ev: unknown) => void) | null = null;
+  onerror: ((ev: unknown) => void) | null = null;
   close = vi.fn();
   send = vi.fn();
 
