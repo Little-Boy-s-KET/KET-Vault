@@ -21,7 +21,6 @@ export function AgentCard({ agent, compact = false }: Props) {
   const cardClass = [
     "agent-card",
     `agent-${agent.status}`,
-    isSkipped ? "agent-skipped" : "",
     isActive ? "agent-active" : "",
     compact ? "agent-compact" : "",
   ].filter(Boolean).join(" ");

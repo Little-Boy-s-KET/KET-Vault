@@ -2,14 +2,12 @@ import sys
 from pathlib import Path
 
 import pytest
-import pytest_asyncio
 from unittest.mock import patch, AsyncMock, MagicMock
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # Mock openai globally before imports
-import sys
 sys.modules['openai'] = MagicMock()
 
 from models import Decision, Proposal, ProposalAction, PipelineState, OpportunityType, AgentDecision
