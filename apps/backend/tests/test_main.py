@@ -7,7 +7,6 @@ from fastapi.testclient import TestClient
 os.environ["LLM_STRATEGY"] = "MOCK"
 os.environ["KET_LIVE_MODE"] = "true"
 
-import sys
 from pathlib import Path
 _BACKEND = Path(__file__).resolve().parent.parent
 _AGENT_CORE = _BACKEND.parent.parent / "packages" / "agent-core"

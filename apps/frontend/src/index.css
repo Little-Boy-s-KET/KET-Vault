@@ -364,11 +364,7 @@ body {
    Agent Board (3 Cards)
    ============================================================================ */
 
-.agent-board {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-lg);
-}
+/* Agent Board layout defined in MoE section below (line ~2640) */
 
 /* ============================================================================
    Agent Card
@@ -967,9 +963,7 @@ body {
     grid-template-columns: 1fr 1fr;
   }
 
-  .agent-board {
-    grid-template-columns: 1fr;
-  }
+  /* .agent-board responsive handled by MoE flex layout */
 
   .header {
     flex-direction: column;
@@ -1117,6 +1111,7 @@ body {
   display: none; /* remove the top line border gradient */
 }
 
+/* Old class selectors (kept for backward compat) */
 .theme-neumorphism .agent-card.analyzing {
   box-shadow: var(--nm-shadow-out), 0 0 20px var(--agent-glow);
   border: none;
@@ -1125,6 +1120,17 @@ body {
 }
 
 .theme-neumorphism .agent-card.decided {
+  box-shadow: var(--nm-shadow-out);
+  border: none;
+}
+
+/* New MoE class selectors */
+.theme-neumorphism .agent-analyzing {
+  box-shadow: var(--nm-shadow-out), 0 0 20px rgba(0, 102, 102, 0.2);
+  border: none;
+}
+
+.theme-neumorphism .agent-decided {
   box-shadow: var(--nm-shadow-out);
   border: none;
 }
@@ -1295,7 +1301,7 @@ body {
 }
 
 .theme-neumorphism .trust-fill {
-  background: linear-gradient(90deg, var(--color-yield), var(--color-macro));
+  background: linear-gradient(90deg, var(--agent-color, var(--color-yield)), rgba(255, 255, 255, 0.4));
 }
 
 .theme-neumorphism .trust-value {
@@ -2971,6 +2977,7 @@ body {
   filter: grayscale(80%);
   pointer-events: none;
   transform: scale(0.98);
+  animation: none !important; /* Prevent slide-in-up from overriding opacity */
 }
 
 /* Active: the "waking up" glow effect */

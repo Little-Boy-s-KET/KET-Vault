@@ -9,7 +9,6 @@ import sys
 from pathlib import Path
 
 import pytest
-import pytest_asyncio
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -247,4 +246,4 @@ class TestQueryGasOracle:
                 assert snapshot.recommended_wait_blocks == 0
                 return
         # If we never hit LOW in 20 tries, that's statistically very unlikely
-        # but not impossible — skip assertion
+        pytest.skip("LOW congestion not observed in 20 iterations")
